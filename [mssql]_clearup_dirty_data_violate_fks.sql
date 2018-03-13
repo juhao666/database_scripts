@@ -1,11 +1,17 @@
 USE $(DB_NAME)
 
 SET NOCOUNT ON
-
 /*clearup FK dirty data
 --1. clearup reference table dirty data
 --2. clearup parent table dirty data
 */
+
+DECLARE @isSkippedStep1 CHAR(1) = '1' -- 0 means will run step 1 and step 2
+
+IF @isSkippedStep1 == '1'
+BEGIN
+ GOTO LabelStep2
+END
 
 --Step 1 :clearup dirty data in referenced tables
 DECLARE pks CURSOR READ_ONLY FOR
@@ -49,10 +55,11 @@ FETCH NEXT FROM pks INTO @ref_obj_id,@ref_col_id,@ref_tab_name,@ref_col_name
 END
 CLOSE pks
 DEALLOCATE pks
-GO
+
+LabelStep2:
 
 --Step2:clearup dirty data in parent tables
-
+GO
 DECLARE fks CURSOR READ_ONLY FOR
 SELECT 
 OBJECT_NAME(rc.object_id) AS reference_table_name
